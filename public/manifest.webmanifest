@@ -1,0 +1,10 @@
+{
+  "name": "Aló Seguro",
+  "short_name": "Aló Seguro",
+  "lang": "es-CL",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2F6F7",
+  "theme_color": "#0E6E6A",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

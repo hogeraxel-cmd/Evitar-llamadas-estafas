@@ -107,6 +107,20 @@ export class ServicioVerificacion {
     return this.#vistaSolicitante(s);
   }
 
+  miembrosDe(familiaId) {
+    return [...this.miembros.values()].filter(m => m.familiaId === familiaId);
+  }
+
+  // Solicitudes que esperan respuesta de este miembro (lo que ve Nico al abrir la app).
+  pendientesDe(objetivoId) {
+    const salida = [];
+    for (const id of this.solicitudes.keys()) {
+      const s = this.#obtener(id);
+      if (s.objetivoId === objetivoId && s.estado === ESTADOS.PENDIENTE) salida.push(this.verObjetivo(id, objetivoId));
+    }
+    return salida;
+  }
+
   alertasDe(familiaId) {
     return this.alertas.filter(a => a.familiaId === familiaId);
   }
