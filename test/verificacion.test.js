@@ -15,7 +15,7 @@ test('Nico elige el numero que ve Rosa: verificado', () => {
   const { s } = nuevo();
   const sol = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });
   const vistaNico = s.verObjetivo(sol.id, 'nico');
-  assert.equal(vistaNico.opciones.length, 3);
+  assert.equal(vistaNico.opciones.length, 6);
   assert.ok(vistaNico.opciones.includes(sol.desafio));
   const r = s.responder(sol.id, 'nico', { eleccion: sol.desafio });
   assert.equal(r.estado, ESTADOS.VERIFICADO);
@@ -71,4 +71,15 @@ test('no se puede verificar a alguien de otra familia ni a uno mismo', () => {
   const { s } = nuevo();
   assert.throws(() => s.crear({ solicitanteId: 'rosa', objetivoId: 'otro' }), /misma familia/);
   assert.throws(() => s.crear({ solicitanteId: 'rosa', objetivoId: 'rosa' }), /uno mismo/);
+});
+
+test('si Nico no responde a tiempo, la familia recibe un aviso', () => {
+  const { s, hora } = nuevo({ vigenciaMs: 60_000 });
+  const sol = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });
+  hora.t += 61_000;
+  assert.equal(s.verSolicitante(sol.id, 'rosa').estado, ESTADOS.EXPIRADO);
+  s.verSolicitante(sol.id, 'rosa'); // consultar de nuevo no duplica el aviso
+  const a = s.alertasDe('f1');
+  assert.equal(a.length, 1);
+  assert.match(a[0].texto, /no hubo respuesta/);
 });

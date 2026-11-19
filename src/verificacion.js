@@ -25,7 +25,8 @@ function mezclar(lista) {
 }
 
 export class ServicioVerificacion {
-  constructor({ ahora = () => Date.now(), vigenciaMs = 120_000, maxIntentos = 1 } = {}) {
+  constructor({ ahora = () => Date.now(), vigenciaMs = 120_000, maxIntentos = 1, numOpciones = 6 } = {}) {
+    this.numOpciones = numOpciones;
     this.ahora = ahora;
     this.vigenciaMs = vigenciaMs;
     this.maxIntentos = maxIntentos;
@@ -49,7 +50,7 @@ export class ServicioVerificacion {
     if (sol.id === obj.id) throw new Error('No se puede verificar a uno mismo');
     const desafio = dosDigitos();
     const distractores = new Set();
-    while (distractores.size < 2) {
+    while (distractores.size < this.numOpciones - 1) {
       const d = dosDigitos();
       if (d !== desafio) distractores.add(d);
     }
@@ -113,7 +114,12 @@ export class ServicioVerificacion {
   #obtener(id) {
     const s = this.solicitudes.get(id);
     if (!s) throw new Error('Solicitud inexistente');
-    if (s.estado === ESTADOS.PENDIENTE && this.ahora() >= s.expira) s.estado = ESTADOS.EXPIRADO;
+    if (s.estado === ESTADOS.PENDIENTE && this.ahora() >= s.expira) {
+      s.estado = ESTADOS.EXPIRADO;
+      const sol = this.miembros.get(s.solicitanteId);
+      const obj = this.miembros.get(s.objetivoId);
+      this.#alertar(s, 'media', `${sol.nombre} pidio verificar a ${obj.nombre} y no hubo respuesta. Conviene llamar a ${obj.nombre} por otro medio.`);
+    }
     return s;
   }
 
