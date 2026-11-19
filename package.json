@@ -1,0 +1,12 @@
+{
+  "name": "alo-seguro",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nucleo de Alo Seguro: verificacion de familiares y deteccion de senales de estafa telefonica.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "engines": { "node": ">=20" }
+}
