@@ -94,7 +94,8 @@ export class ServicioVerificacion {
     const sol = this.miembros.get(s.solicitanteId);
     return {
       id: s.id, estado: s.estado, expira: s.expira,
-      mensaje: `${sol.nombre} quiere verificar una llamada. ¿Qué número le aparece a ${nombreCorto(sol)}?`,
+      solicitante: nombreCorto(sol),
+      mensaje: `${nombreCorto(sol)} está verificando una llamada. ¿Estás hablando con ${nombreCorto(sol)} ahora?`,
       opciones: s.opciones,
     };
   }
@@ -153,7 +154,7 @@ export class ServicioVerificacion {
   #vistaSolicitante(s) {
     const obj = this.miembros.get(s.objetivoId);
     const textos = {
-      [ESTADOS.PENDIENTE]: `Dígale a ${obj.nombre} el número ${s.desafio}. Si de verdad es quien dice, lo elegirá en su teléfono.`,
+      [ESTADOS.PENDIENTE]: `Esperando que ${nombreCorto(obj)} toque el número ${s.desafio} en su teléfono…`,
       [ESTADOS.VERIFICADO]: `${obj.nombre} confirmó desde su teléfono. La llamada es de verdad.`,
       [ESTADOS.RECHAZADO]: 'No se pudo confirmar. No transfiera dinero ni entregue datos.',
       [ESTADOS.NO_SOY_YO]: `${obj.nombre} dice que no está llamando. Es una estafa: corte la llamada.`,

@@ -41,6 +41,10 @@ p{margin:0}
 .estado.grande{font-size:1.15rem;display:flex;flex-direction:column;gap:6px}
 .estado .normal{font-weight:400}
 .reloj{text-align:center;font-weight:700}
+.pasos{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px;font-size:1.1rem}
+.pasos q{font-weight:700}
+.consejo{border-left:4px solid var(--danger);padding:4px 0 4px 10px;color:var(--ink)}
+.respuesta-titulo{margin-top:4px}
 .card,.estado{scroll-margin-top:12px}
 textarea,input[type=password]{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink)}
 textarea{min-height:100px;resize:vertical}

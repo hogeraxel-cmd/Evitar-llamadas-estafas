@@ -79,7 +79,14 @@ async function verificar(objetivo, zona) {
   const numero = el('div', { class: 'numero', ariaLabel: `Número ${sol.desafio}` }, sol.desafio);
   const msg = el('p', { class: 'estado pendiente grande' }, sol.mensaje);
   const reloj = el('p', { class: 'muted reloj' });
-  zona.replaceChildren(el('h2', {}, `Verificando a ${objetivo.nombre}`), numero, msg, reloj);
+  const nombre = objetivo.nombre.replace(/\s*\(.*\)\s*$/, '');
+  const pasos = el('ol', { class: 'pasos' },
+    el('li', {}, 'Ponga el altavoz.'),
+    el('li', {}, 'Dígale: ', el('q', {}, `Te llegó un aviso de Aló Seguro. Toca el número ${sol.desafio}.`)),
+    el('li', {}, 'Espere aquí la respuesta.'),
+  );
+  const consejo = el('p', { class: 'consejo' }, 'Si no le contesta, le cambia el tema o le pide que se apure: corte la llamada. No transfiera nada.');
+  zona.replaceChildren(el('h2', {}, `Verificando a ${nombre}`), numero, pasos, msg, reloj, consejo);
   mostrar(zona);
   const tic = () => {
     const s = Math.max(0, Math.round((sol.expira - Date.now()) / 1000));
@@ -92,7 +99,7 @@ async function verificar(objetivo, zona) {
       const v = await api(`/verificaciones/${sol.id}/solicitante?quien=${encodeURIComponent(yo.id)}`);
       msg.textContent = v.mensaje;
       msg.className = 'estado grande ' + (v.estado === 'pendiente' ? 'pendiente' : v.estado === 'verificado' ? 'verificado' : 'mal');
-      if (v.estado !== 'pendiente') { numero.hidden = true; reloj.hidden = true; limpiarZonaTimers(); mostrar(zona); }
+      if (v.estado !== 'pendiente') { numero.hidden = pasos.hidden = reloj.hidden = consejo.hidden = true; limpiarZonaTimers(); mostrar(zona); }
     } catch { /* reintenta en el siguiente ciclo */ }
   }, 1500));
 }
@@ -156,10 +163,13 @@ async function tarjetaPendiente(p, alTerminar) {
     const textos = { verificado: 'Gracias. Confirmado.', no_soy_yo: 'Listo. Avisamos a la familia.', expirado: 'Este pedido ya venció.' };
     cont.replaceChildren(el('p', { class: 'estado ' + (r.estado === 'verificado' ? 'verificado' : 'mal') }, textos[r.estado] ?? 'No coincidió el número. Avisamos a la familia.'));
   };
+  const quien = p.solicitante ?? 'esa persona';
   const mostrarOpciones = () => cont.replaceChildren(
     el('h2', {}, p.mensaje),
+    el('p', { class: 'respuesta-titulo' }, el('b', {}, 'Sí: '), `toca el número que ${quien} te dice.`),
     el('div', { class: 'opciones' }, p.opciones.map(o => el('button', { class: 'btn', type: 'button', onclick: () => respuesta({ eleccion: o }) }, o))),
-    el('button', { class: 'btn peligro', type: 'button', onclick: () => respuesta({ noSoyYo: true }) }, 'No soy yo, no estoy llamando'),
+    el('p', { class: 'respuesta-titulo' }, el('b', {}, 'No: '), `alguien se está haciendo pasar por ti.`),
+    el('button', { class: 'btn peligro', type: 'button', onclick: () => respuesta({ noSoyYo: true }) }, `No estoy hablando con ${quien}`),
   );
   await compuertaPin(cont, mostrarOpciones);
   return cont;

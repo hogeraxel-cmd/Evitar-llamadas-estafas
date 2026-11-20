@@ -103,7 +103,9 @@ test('si Nico no responde a tiempo, la familia recibe un aviso', () => {
 test('la alerta de "No soy yo" dice a quien llamaron y por quien se hicieron pasar', () => {
   const { s } = nuevo();
   const sol = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });
-  assert.match(s.verObjetivo(sol.id, 'nico').mensaje, /¿Qué número le aparece a Rosa\?/);
+  const vista = s.verObjetivo(sol.id, 'nico');
+  assert.equal(vista.solicitante, 'Rosa');
+  assert.match(vista.mensaje, /¿Estás hablando con Rosa ahora\?/);
   s.responder(sol.id, 'nico', { noSoyYo: true });
   const [a] = s.alertasDe('f1');
   assert.equal(a.gravedad, 'alta');
