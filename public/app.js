@@ -107,14 +107,17 @@ async function opcionesPara(elegido, zona, zonaVerif) {
   }
   zona.replaceChildren(
     el('h2', {}, `Dice ser ${nombre}. Compruébelo:`),
-    el('section', { class: 'opcion' }, el('h3', {}, '1. La palabra de la familia'), ...opcionPalabra),
     el('section', { class: 'opcion' },
-      el('h3', {}, `2. Que lo confirme desde su teléfono`),
+      el('h3', {}, `1. Que lo confirme desde su teléfono`),
       el('p', {}, `A ${nombre} le llega un aviso. Si es de verdad, lo confirma.`),
-      el('button', { class: 'btn', type: 'button', onclick: e => ocupado(e.currentTarget, () => verificar(m, zonaVerif)) }, `Verificar con el teléfono de ${nombre}`),
+      m.usaLaApp === false
+        ? el('p', { class: 'estado pendiente' }, `${nombre} todavía no usa la app: es probable que no le llegue el aviso. Mejor use la palabra de la familia o llame a ${nombre}.`)
+        : '',
+      el('button', { class: 'btn primario', type: 'button', onclick: e => ocupado(e.currentTarget, () => verificar(m, zonaVerif)) }, `Verificar con el teléfono de ${nombre}`),
     ),
+    el('section', { class: 'opcion' }, el('h3', {}, '2. La palabra de la familia'), ...opcionPalabra),
     el('section', { class: 'opcion segura' },
-      el('h3', {}, '3. Cortar y llamarlo usted'),
+      el('h3', {}, `3. Cortar y llamar usted a ${nombre}`),
       el('p', {}, `Lo más seguro: corte y llame a ${nombre} al número de siempre.`),
       botonLlamar(m),
     ),

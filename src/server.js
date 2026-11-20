@@ -81,7 +81,9 @@ export function crearServidor(servicio = new ServicioVerificacion()) {
         return json(res, 200, servicio.miembrosDe(ruta[2]));
       }
       if (req.method === 'GET' && url.pathname === '/api/pendientes') {
-        return json(res, 200, servicio.pendientesDe(url.searchParams.get('quien')));
+        const quien = url.searchParams.get('quien');
+        servicio.marcarVisto(quien);
+        return json(res, 200, servicio.pendientesDe(quien));
       }
       if (req.method === 'POST' && url.pathname === '/api/verificaciones') {
         return json(res, 201, servicio.crear(await leer(req)));

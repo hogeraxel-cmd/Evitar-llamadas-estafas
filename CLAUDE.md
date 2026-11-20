@@ -21,7 +21,9 @@ Prototipo de verificación de familiares y detección de estafas telefónicas. V
 - Sin HTTPS no existe `crypto.subtle`: el PIN usa un hash simple de respaldo (`public/app.js`).
 - Mejoras para adultos mayores en `public/app.js`: baja sola al número y al resultado, cuenta regresiva de 2 min, resultado en palabras ("Cuidado: parece una estafa"), botones bloqueados mientras cargan, mensajes si falla la red, avisos que solo se redibujan si cambian.
 - Plan de Firebase en `docs/PLAN-FIREBASE.md`; plan de app Android (aviso con números no guardados) en `docs/PLAN-ANDROID.md`.
-- Rosa ahora elige "¿Quién dice ser?" y ve 3 formas de comprobarlo: palabra de la familia, verificar con el teléfono del familiar, o cortar y llamar al número de siempre (enlace `tel:`, la más segura).
+- Rosa ahora elige "¿Quién dice ser?" y ve 3 formas de comprobarlo, en este orden (pedido de Axel): 1) verificar con el teléfono del familiar, 2) palabra de la familia, 3) cortar y llamar al número de siempre (enlace `tel:`, marcada como la más segura).
+- Si un familiar nunca abrió la app (`usaLaApp`, se marca al consultar `/api/pendientes`), la opción 1 le advierte a Rosa que probablemente no le llegue el aviso.
+- Hoy Nico solo ve el pedido con la app abierta (no hay push). El aviso por pasos (push → SMS con enlace → llamada automática → familia; WhatsApp más adelante) está en `docs/PLAN-FIREBASE.md`.
 - Verificación: "dígale a quien la llama" y aviso de "si dice que perdió su celular, eso no lo confirma".
 - "¿Es una estafa?" ahora es de preguntas Sí/No (`PREGUNTAS` y `analizar({texto, marcadas})` en `src/riesgo.js`); escribir queda en "Prefiero escribirlo".
 - Familiares (Nico, Camila) guardan su número de siempre y la palabra de la familia en "Preparar la ayuda para la familia". Los números de la demo son ficticios.

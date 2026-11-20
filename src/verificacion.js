@@ -54,7 +54,8 @@ export class ServicioVerificacion {
     const t = limpiarTelefono(telefono);
     if (t.replace(/\D/g, '').length < 8) throw new Error('Número muy corto');
     m.telefono = t;
-    return m;
+    const { vistoEn, ...publico } = m;
+    return { ...publico, usaLaApp: vistoEn !== undefined };
   }
 
   // Palabra clave de la familia: la conoce solo la familia; quien llama debe decirla.
@@ -150,8 +151,17 @@ export class ServicioVerificacion {
     return this.#vistaSolicitante(s);
   }
 
+  // Se llama cada vez que un familiar abre la app y revisa sus pendientes.
+  // Sirve para advertir a Rosa si alguien nunca la ha usado (no le llegaría el aviso).
+  marcarVisto(miembroId) {
+    const m = this.miembros.get(miembroId);
+    if (m) m.vistoEn = this.ahora();
+  }
+
   miembrosDe(familiaId) {
-    return [...this.miembros.values()].filter(m => m.familiaId === familiaId);
+    return [...this.miembros.values()]
+      .filter(m => m.familiaId === familiaId)
+      .map(({ vistoEn, ...m }) => ({ ...m, usaLaApp: vistoEn !== undefined }));
   }
 
   // Solicitudes que esperan respuesta de este miembro (lo que ve Nico al abrir la app).

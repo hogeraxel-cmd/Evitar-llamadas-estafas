@@ -6,7 +6,7 @@ Verificación de familiares y detección de señales de estafa telefónica, pens
 
 ```bash
 npm start            # http://127.0.0.1:3000 (familia de ejemplo: Rosa, Nico y Camila)
-npm test             # 29 pruebas
+npm test             # 30 pruebas
 ```
 
 Abre la app en dos ventanas (una normal y otra de incógnito, porque la app recuerda en el navegador quién eres): una como **Rosa** y otra como **Nico**.

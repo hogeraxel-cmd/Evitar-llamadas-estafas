@@ -52,6 +52,26 @@ La lógica de `src/verificacion.js` se mueve casi tal cual a funciones, porque e
 3. Rosa y Nico entran con su número y escanean o escriben el código.
    Camila puede ayudar a Rosa a configurarlo en persona.
 
+## Aviso a Nico por pasos (escalamiento)
+
+Nico puede ir caminando con el teléfono en el bolsillo, o no tener la app instalada.
+Por eso el aviso sube de intensidad hasta que alguien responde:
+
+| Tiempo | Qué pasa | Necesita la app | Servicio |
+|---|---|---|---|
+| 0 s | **Push** (suena y vibra como WhatsApp) | Sí | FCM (gratis) |
+| 30 s sin respuesta, o no tiene la app | **SMS con enlace** que abre una página con los 6 números y "No estoy hablando con Rosa", sin instalar nada | No | Proveedor de SMS (ej. Twilio): cobra por SMS |
+| 60 s sin respuesta | **Llamada automática**: "Rosa está verificando una llamada. Si estás hablando con ella, marca el número que te dice. Si no, marca 9" | No (sirve hasta en un teléfono básico) | Voz de Twilio u otro: cobra por minuto |
+| 2 min | Vence: aviso a toda la familia, y a Rosa le sale "No respondió. Corte y llámelo al número de siempre" | – | Ya existe en el prototipo |
+
+Detalles:
+- El enlace del SMS lleva un **código de un solo uso** que vence con la verificación. La página **nunca pide datos, claves ni login**: solo muestra los 6 números. Explicarle esto a la familia, porque los estafadores también mandan SMS con enlaces.
+- La llamada automática: si Nico está hablando con Rosa desde su número, le entra como llamada en espera. Puede contestar o seguir con el SMS o el push.
+- Cada familiar elige en la app qué pasos quiere (por ejemplo, "no me llamen, mándenme SMS").
+- **WhatsApp con botón** reemplazaría al SMS más adelante, porque es lo que más se mira en Chile. Requiere la API de WhatsApp Business: empresa verificada en Meta, plantillas de mensaje aprobadas y cobro por conversación. Dejarlo para cuando haya usuarios reales.
+- Costos: con pocas familias son unos pocos pesos por verificación. Poner límite de gasto en el proveedor.
+- La lógica va en una Cloud Function programada (cada 15-30 s revisa las verificaciones pendientes y avanza el paso).
+
 ## Avisos push: detalles importantes
 
 - **Android**: funciona desde el navegador (Chrome), instalada o no.
@@ -73,7 +93,9 @@ La lógica de `src/verificacion.js` se mueve casi tal cual a funciones, porque e
 4. Login por teléfono y flujo de invitación a la familia.
 5. App web: cambiar `fetch('/api/...')` por Firebase SDK, y escuchar cambios en tiempo real en vez de consultar cada 2 s.
 6. Push con FCM, incluyendo instrucciones para iPhone.
-7. Hosting y prueba con la familia real.
+7. Escalamiento: SMS con enlace y llamada automática (ver "Aviso a Nico por pasos").
+8. Hosting y prueba con la familia real.
+9. Más adelante: WhatsApp con botón en vez de SMS.
 
 ## Antes de usarlo con personas reales
 

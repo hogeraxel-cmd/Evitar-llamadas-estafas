@@ -100,6 +100,16 @@ test('si Nico no responde a tiempo, la familia recibe un aviso', () => {
   assert.match(a[0].texto, /no hubo respuesta/);
 });
 
+test('se sabe si un familiar usa la app, sin exponer cuando', () => {
+  const { s } = nuevo();
+  const nico = () => s.miembrosDe('f1').find(m => m.id === 'nico');
+  assert.equal(nico().usaLaApp, false);
+  s.marcarVisto('nico');
+  assert.equal(nico().usaLaApp, true);
+  assert.equal(nico().vistoEn, undefined);
+  s.marcarVisto('no-existe'); // no rompe
+});
+
 test('cada uno guarda solo su propio numero de siempre', () => {
   const { s } = nuevo();
   assert.equal(s.definirTelefono('nico', 'nico', '+56 9 1234-5678 <script>').telefono, '+56 9 12345678');
