@@ -21,6 +21,22 @@ test('Nico elige el numero que ve Rosa: verificado', () => {
   assert.equal(r.estado, ESTADOS.VERIFICADO);
 });
 
+test('si Rosa toca dos veces, se reusa la misma solicitud y Nico ve un solo pendiente', () => {
+  const { s, hora } = nuevo();
+  const a = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });
+  const b = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });
+  assert.equal(b.id, a.id);
+  assert.equal(b.desafio, a.desafio);
+  assert.equal(s.pendientesDe('nico').length, 1);
+  // Ya respondida o vencida, un nuevo toque si crea una solicitud nueva.
+  s.responder(a.id, 'nico', { eleccion: a.desafio });
+  const c = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });
+  assert.notEqual(c.id, a.id);
+  hora.t += 200_000;
+  const d = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });
+  assert.notEqual(d.id, c.id);
+});
+
 test('la vista de Nico no revela cual numero es el correcto', () => {
   const { s } = nuevo();
   const sol = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });

@@ -48,6 +48,15 @@ export class ServicioVerificacion {
     if (!sol || !obj) throw new Error('Miembro desconocido');
     if (sol.familiaId !== obj.familiaId) throw new Error('Solo se puede verificar a alguien de la misma familia');
     if (sol.id === obj.id) throw new Error('No se puede verificar a uno mismo');
+    // Si ya hay una pendiente de esta persona hacia el mismo familiar (p. ej. tocó dos veces),
+    // se devuelve esa misma: así Rosa y Nico siempre ven el mismo número.
+    for (const id of this.solicitudes.keys()) {
+      const previa = this.#obtener(id);
+      if (previa.solicitanteId === solicitanteId && previa.objetivoId === objetivoId
+          && previa.estado === ESTADOS.PENDIENTE) {
+        return this.#vistaSolicitante(previa);
+      }
+    }
     const desafio = dosDigitos();
     const distractores = new Set();
     while (distractores.size < this.numOpciones - 1) {
