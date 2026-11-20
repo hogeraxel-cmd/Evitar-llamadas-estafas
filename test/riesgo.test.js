@@ -1,6 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { analizarTexto } from '../src/riesgo.js';
+import { analizarTexto, analizar, PREGUNTAS } from '../src/riesgo.js';
+
+test('preguntas Si/No: dinero + numero nuevo es alto, sin marcar nada es bajo', () => {
+  assert.equal(analizar({ marcadas: ['dinero', 'numero_nuevo'] }).nivel, 'alto');
+  assert.equal(analizar({ marcadas: [] }).nivel, 'bajo');
+  assert.equal(analizar({ marcadas: ['codigo'] }).nivel, 'alto');
+  // ids desconocidos se ignoran
+  assert.equal(analizar({ marcadas: ['inventado'] }).puntaje, 0);
+  // cada pregunta corresponde a una regla real
+  for (const p of PREGUNTAS) assert.ok(analizar({ marcadas: [p.id] }).senales.some(s => s.id === p.id), p.id);
+});
+
+test('preguntas y texto se suman', () => {
+  const r = analizar({ texto: 'me dijo que era urgente', marcadas: ['dinero', 'apuros'] });
+  assert.equal(r.puntaje, 90);
+});
 
 test('falso banco que pide codigo por SMS es riesgo alto', () => {
   const r = analizarTexto('Le hablo del banco. Detectamos movimientos sospechosos y debemos actuar hoy mismo. Necesito que me dicte el código que le llegó por SMS.');
@@ -12,7 +27,7 @@ test('nieto en apuros con numero nuevo, dinero y secreto es riesgo alto', () => 
   const r = analizarTexto('Abuela, soy yo, cambié de número. Tuve un accidente, necesito que me transfieras plata ahora mismo y no le diga a nadie.');
   assert.equal(r.nivel, 'alto');
   assert.ok(r.puntaje >= 90);
-  assert.match(r.recomendacion, /Verificar a/);
+  assert.match(r.recomendacion, /número de siempre/);
 });
 
 test('farmacia que avisa una receta es riesgo bajo', () => {

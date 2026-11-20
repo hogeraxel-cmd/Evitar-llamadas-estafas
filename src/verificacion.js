@@ -16,6 +16,8 @@ export const ESTADOS = Object.freeze({
 const dosDigitos = () => String(randomInt(10, 100));
 // "Rosa (abuela)" -> "Rosa", para frases más naturales.
 const nombreCorto = m => m.nombre.replace(/\s*\(.*\)\s*$/, '');
+// Deja solo dígitos, espacios y un "+" inicial (se usa en un enlace tel:).
+const limpiarTelefono = t => String(t ?? '').replace(/[^\d+ ]/g, '').replace(/(?!^)\+/g, '').replace(/\s+/g, ' ').trim().slice(0, 20);
 
 function mezclar(lista) {
   const a = [...lista];
@@ -35,13 +37,40 @@ export class ServicioVerificacion {
     this.miembros = new Map();      // id -> { id, nombre, familiaId, rol }
     this.solicitudes = new Map();   // id -> solicitud
     this.alertas = [];              // alertas para la familia
+    this.palabras = new Map();      // familiaId -> { palabra, definidaPor, cuando }
   }
 
-  registrarMiembro({ id, nombre, familiaId, rol = 'familiar' }) {
+  registrarMiembro({ id, nombre, familiaId, rol = 'familiar', telefono = '' }) {
     if (!id || !nombre || !familiaId) throw new Error('Faltan id, nombre o familiaId');
-    const m = { id, nombre, familiaId, rol };
+    const m = { id, nombre, familiaId, rol, telefono: limpiarTelefono(telefono) };
     this.miembros.set(id, m);
     return m;
+  }
+
+  // El "número de siempre": Rosa puede cortar y llamar ahí, aunque el familiar no tenga la app.
+  definirTelefono(miembroId, quienId, telefono) {
+    const m = this.miembros.get(miembroId);
+    if (!m || miembroId !== quienId) throw new Error('No autorizado');
+    const t = limpiarTelefono(telefono);
+    if (t.replace(/\D/g, '').length < 8) throw new Error('Número muy corto');
+    m.telefono = t;
+    return m;
+  }
+
+  // Palabra clave de la familia: la conoce solo la familia; quien llama debe decirla.
+  definirPalabraClave(familiaId, quienId, palabra) {
+    const m = this.miembros.get(quienId);
+    if (!m || m.familiaId !== familiaId) throw new Error('No autorizado');
+    const p = String(palabra ?? '').trim();
+    if (p.length < 3 || p.length > 40) throw new Error('La palabra debe tener entre 3 y 40 letras');
+    this.palabras.set(familiaId, { palabra: p, definidaPor: m.id, cuando: this.ahora() });
+    return { definida: true };
+  }
+
+  verPalabraClave(familiaId, quienId) {
+    const m = this.miembros.get(quienId);
+    if (!m || m.familiaId !== familiaId) throw new Error('No autorizado');
+    return { palabra: this.palabras.get(familiaId)?.palabra ?? null };
   }
 
   crear({ solicitanteId, objetivoId }) {

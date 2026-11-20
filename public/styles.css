@@ -10,6 +10,7 @@
   --danger:#F0807A;--danger-soft:#3B1B19;--warn:#E8B24F;--warn-soft:#3A2C0D;--ok:#6DCB92;--ok-soft:#15341F;
   color-scheme:dark}}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{font-size:18px}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.45;
   min-height:100vh;display:flex;flex-direction:column;
@@ -45,6 +46,20 @@ p{margin:0}
 .pasos q{font-weight:700}
 .consejo{border-left:4px solid var(--danger);padding:4px 0 4px 10px;color:var(--ink)}
 .respuesta-titulo{margin-top:4px}
+h3{margin:0;font-size:1.05rem;line-height:1.25}
+a.btn{display:block;text-decoration:none}
+.btn[aria-pressed=true]:not(.toggle){outline:3px solid var(--ink);outline-offset:2px}
+.opcion{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.opcion.segura{border:2px solid var(--ok);border-radius:12px;padding:12px;background:var(--ok-soft)}
+.palabra{font-size:2rem;font-weight:700;text-align:center;letter-spacing:.04em}
+.toggle{display:flex;align-items:center;gap:12px;text-align:left;font-weight:400}
+.toggle .marca{flex:none;width:44px;height:32px;border:2px solid var(--line);border-radius:8px;display:grid;place-items:center;font-weight:700}
+.toggle[aria-pressed=true]{border-color:var(--danger);background:var(--danger-soft)}
+.toggle[aria-pressed=true] .marca{background:var(--danger);border-color:var(--danger);color:#fff}
+details summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
+details.card{gap:12px}
+input[type=tel],input[type=text]{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink)}
+input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .card,.estado{scroll-margin-top:12px}
 textarea,input[type=password]{font:inherit;width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink)}
 textarea{min-height:100px;resize:vertical}

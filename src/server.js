@@ -5,7 +5,7 @@ import os from 'node:os';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { analizarTexto } from './riesgo.js';
+import { analizar, PREGUNTAS } from './riesgo.js';
 import { ServicioVerificacion } from './verificacion.js';
 
 const PUBLICO = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
@@ -18,8 +18,9 @@ const CSP = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-
 
 export function sembrarDemo(servicio) {
   servicio.registrarMiembro({ id: 'rosa', nombre: 'Rosa (abuela)', familiaId: 'f1', rol: 'adulto_mayor' });
-  servicio.registrarMiembro({ id: 'nico', nombre: 'Nico (nieto)', familiaId: 'f1', rol: 'familiar' });
-  servicio.registrarMiembro({ id: 'camila', nombre: 'Camila (hija)', familiaId: 'f1', rol: 'familiar' });
+  // Números de ejemplo, no reales.
+  servicio.registrarMiembro({ id: 'nico', nombre: 'Nico (nieto)', familiaId: 'f1', rol: 'familiar', telefono: '+56 9 1111 1111' });
+  servicio.registrarMiembro({ id: 'camila', nombre: 'Camila (hija)', familiaId: 'f1', rol: 'familiar', telefono: '+56 9 2222 2222' });
 }
 
 export function crearServidor(servicio = new ServicioVerificacion()) {
@@ -56,8 +57,22 @@ export function crearServidor(servicio = new ServicioVerificacion()) {
         return await estatico(res, url.pathname);
       }
       if (req.method === 'POST' && url.pathname === '/api/analizar') {
-        const { texto } = await leer(req);
-        return json(res, 200, analizarTexto(texto));
+        const { texto, marcadas } = await leer(req);
+        return json(res, 200, analizar({ texto, marcadas }));
+      }
+      if (req.method === 'GET' && url.pathname === '/api/preguntas') {
+        return json(res, 200, PREGUNTAS);
+      }
+      if (ruta[1] === 'familias' && ruta[2] && ruta[3] === 'palabra') {
+        if (req.method === 'GET') return json(res, 200, servicio.verPalabraClave(ruta[2], url.searchParams.get('quien')));
+        if (req.method === 'POST') {
+          const { quienId, palabra } = await leer(req);
+          return json(res, 200, servicio.definirPalabraClave(ruta[2], quienId, palabra));
+        }
+      }
+      if (req.method === 'POST' && ruta[1] === 'miembros' && ruta[2] && ruta[3] === 'telefono') {
+        const { quienId, telefono } = await leer(req);
+        return json(res, 200, servicio.definirTelefono(ruta[2], quienId, telefono));
       }
       if (req.method === 'POST' && url.pathname === '/api/miembros') {
         return json(res, 201, servicio.registrarMiembro(await leer(req)));

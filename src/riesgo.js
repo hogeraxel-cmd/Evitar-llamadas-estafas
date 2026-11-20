@@ -45,11 +45,30 @@ export function nivelDe(puntaje) {
   return 'bajo';
 }
 
+// Preguntas de Sí/No para quien no quiere o no puede escribir. Cada una marca una señal.
+export const PREGUNTAS = [
+  { id: 'dinero', texto: '¿Le pidió dinero, una transferencia o un depósito?' },
+  { id: 'urgencia', texto: '¿Le dijo que era urgente o que se apurara?' },
+  { id: 'secreto', texto: '¿Le pidió que no le contara a nadie?' },
+  { id: 'numero_nuevo', texto: '¿Dijo que tiene un número nuevo o que perdió su celular?' },
+  { id: 'apuros', texto: '¿Dijo estar en problemas? (accidente, detenido, hospital)' },
+  { id: 'codigo', texto: '¿Le pidió un código, una clave o datos de su tarjeta?' },
+  { id: 'autoridad', texto: '¿Dijo ser del banco, Carabineros u otra institución?' },
+  { id: 'premio', texto: '¿Le dijo que ganó un premio o un sorteo?' },
+  { id: 'acceso_remoto', texto: '¿Le pidió instalar una aplicación?' },
+];
+
 export function analizarTexto(texto) {
+  return analizar({ texto });
+}
+
+// Une lo que dice el texto (si hay) con las preguntas que la persona marcó como "Sí".
+export function analizar({ texto = '', marcadas = [] } = {}) {
   const t = normalizar(texto);
   // "No necesita pagar" no es un pedido de dinero: se quita antes de buscar señales.
   const sinFrasesSeguras = SEGURAS.reduce((txt, s) => txt.replace(new RegExp(s.re.source, 'g'), ' '), t);
-  const senales = REGLAS.filter(r => r.re.test(sinFrasesSeguras));
+  const marcadasSet = new Set(Array.isArray(marcadas) ? marcadas.map(String) : []);
+  const senales = REGLAS.filter(r => marcadasSet.has(r.id) || r.re.test(sinFrasesSeguras));
   // Probabilidad combinada: cada senal suma evidencia sin pasar de 100.
   let ausencia = 1;
   for (const s of senales) ausencia *= 1 - s.peso;
@@ -74,7 +93,7 @@ export function analizarTexto(texto) {
 function recomendar(nivel, ids) {
   if (nivel === 'alto') {
     return ids.has('apuros') || ids.has('numero_nuevo')
-      ? 'No transfiera nada. Corte y toque el botón "Verificar a…" de su familiar, más arriba en esta aplicación.'
+      ? 'No transfiera nada. Corte y llame a su familiar a su número de siempre.'
       : 'Corte la llamada. Ningún banco ni institución pide códigos o claves por teléfono.';
   }
   if (nivel === 'medio') return 'Desconfíe y consulte a un familiar antes de seguir.';

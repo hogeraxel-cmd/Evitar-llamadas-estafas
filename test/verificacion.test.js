@@ -100,6 +100,23 @@ test('si Nico no responde a tiempo, la familia recibe un aviso', () => {
   assert.match(a[0].texto, /no hubo respuesta/);
 });
 
+test('cada uno guarda solo su propio numero de siempre', () => {
+  const { s } = nuevo();
+  assert.equal(s.definirTelefono('nico', 'nico', '+56 9 1234-5678 <script>').telefono, '+56 9 12345678');
+  assert.throws(() => s.definirTelefono('nico', 'rosa', '+56 9 0000 0000'), /No autorizado/);
+  assert.throws(() => s.definirTelefono('nico', 'nico', '123'), /corto/);
+});
+
+test('palabra clave: solo la familia la define y la ve', () => {
+  const { s } = nuevo();
+  assert.equal(s.verPalabraClave('f1', 'rosa').palabra, null);
+  s.definirPalabraClave('f1', 'nico', '  empanada  ');
+  assert.equal(s.verPalabraClave('f1', 'rosa').palabra, 'empanada');
+  assert.throws(() => s.verPalabraClave('f1', 'otro'), /No autorizado/);
+  assert.throws(() => s.definirPalabraClave('f1', 'otro', 'chancho'), /No autorizado/);
+  assert.throws(() => s.definirPalabraClave('f1', 'nico', 'ab'), /entre 3 y 40/);
+});
+
 test('la alerta de "No soy yo" dice a quien llamaron y por quien se hicieron pasar', () => {
   const { s } = nuevo();
   const sol = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });
