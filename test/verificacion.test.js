@@ -99,3 +99,13 @@ test('si Nico no responde a tiempo, la familia recibe un aviso', () => {
   assert.equal(a.length, 1);
   assert.match(a[0].texto, /no hubo respuesta/);
 });
+
+test('la alerta de "No soy yo" dice a quien llamaron y por quien se hicieron pasar', () => {
+  const { s } = nuevo();
+  const sol = s.crear({ solicitanteId: 'rosa', objetivoId: 'nico' });
+  assert.match(s.verObjetivo(sol.id, 'nico').mensaje, /¿Qué número le aparece a Rosa\?/);
+  s.responder(sol.id, 'nico', { noSoyYo: true });
+  const [a] = s.alertasDe('f1');
+  assert.equal(a.gravedad, 'alta');
+  assert.match(a.texto, /llamó a Rosa haciéndose pasar por Nico/);
+});

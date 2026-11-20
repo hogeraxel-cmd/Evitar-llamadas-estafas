@@ -14,6 +14,8 @@ export const ESTADOS = Object.freeze({
 });
 
 const dosDigitos = () => String(randomInt(10, 100));
+// "Rosa (abuela)" -> "Rosa", para frases más naturales.
+const nombreCorto = m => m.nombre.replace(/\s*\(.*\)\s*$/, '');
 
 function mezclar(lista) {
   const a = [...lista];
@@ -92,7 +94,7 @@ export class ServicioVerificacion {
     const sol = this.miembros.get(s.solicitanteId);
     return {
       id: s.id, estado: s.estado, expira: s.expira,
-      mensaje: `${sol.nombre} quiere verificar una llamada. ¿Que numero ve ella?`,
+      mensaje: `${sol.nombre} quiere verificar una llamada. ¿Qué número le aparece a ${nombreCorto(sol)}?`,
       opciones: s.opciones,
     };
   }
@@ -101,9 +103,11 @@ export class ServicioVerificacion {
     const s = this.#obtener(id);
     if (s.objetivoId !== quienId) throw new Error('No autorizado');
     if (s.estado !== ESTADOS.PENDIENTE) return this.#vistaSolicitante(s);
+    const sol = nombreCorto(this.miembros.get(s.solicitanteId));
+    const obj = nombreCorto(this.miembros.get(s.objetivoId));
     if (noSoyYo) {
       s.estado = ESTADOS.NO_SOY_YO;
-      this.#alertar(s, 'alta', 'Intento de suplantacion confirmado: la persona verificada dice que no esta llamando.');
+      this.#alertar(s, 'alta', `Intento de estafa: alguien llamó a ${sol} haciéndose pasar por ${obj}. ${obj} confirmó que no estaba llamando.`);
       return this.#vistaSolicitante(s);
     }
     s.intentos++;
@@ -111,7 +115,7 @@ export class ServicioVerificacion {
       s.estado = ESTADOS.VERIFICADO;
     } else {
       s.estado = ESTADOS.RECHAZADO;
-      this.#alertar(s, 'media', 'Se respondio un numero equivocado en una verificacion.');
+      this.#alertar(s, 'media', `${sol} pidió verificar a ${obj} y se eligió un número equivocado. No se pudo confirmar la llamada.`);
     }
     return this.#vistaSolicitante(s);
   }
@@ -139,9 +143,9 @@ export class ServicioVerificacion {
     if (!s) throw new Error('Solicitud inexistente');
     if (s.estado === ESTADOS.PENDIENTE && this.ahora() >= s.expira) {
       s.estado = ESTADOS.EXPIRADO;
-      const sol = this.miembros.get(s.solicitanteId);
-      const obj = this.miembros.get(s.objetivoId);
-      this.#alertar(s, 'media', `${sol.nombre} pidio verificar a ${obj.nombre} y no hubo respuesta. Conviene llamar a ${obj.nombre} por otro medio.`);
+      const sol = nombreCorto(this.miembros.get(s.solicitanteId));
+      const obj = nombreCorto(this.miembros.get(s.objetivoId));
+      this.#alertar(s, 'media', `${sol} pidió verificar a ${obj} y no hubo respuesta. Conviene llamar a ${obj} por otro medio.`);
     }
     return s;
   }
@@ -149,8 +153,8 @@ export class ServicioVerificacion {
   #vistaSolicitante(s) {
     const obj = this.miembros.get(s.objetivoId);
     const textos = {
-      [ESTADOS.PENDIENTE]: `Dígale a ${obj.nombre} el número ${s.desafio}. Si es él de verdad, lo elegirá en su teléfono.`,
-      [ESTADOS.VERIFICADO]: `${obj.nombre} confirmó desde su teléfono. Es él.`,
+      [ESTADOS.PENDIENTE]: `Dígale a ${obj.nombre} el número ${s.desafio}. Si de verdad es quien dice, lo elegirá en su teléfono.`,
+      [ESTADOS.VERIFICADO]: `${obj.nombre} confirmó desde su teléfono. La llamada es de verdad.`,
       [ESTADOS.RECHAZADO]: 'No se pudo confirmar. No transfiera dinero ni entregue datos.',
       [ESTADOS.NO_SOY_YO]: `${obj.nombre} dice que no está llamando. Es una estafa: corte la llamada.`,
       [ESTADOS.EXPIRADO]: 'Se acabó el tiempo sin respuesta. Trate como no verificado y llame a su familiar al número de siempre.',
