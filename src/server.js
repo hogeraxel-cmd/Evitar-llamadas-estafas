@@ -90,7 +90,7 @@ export function crearServidor(servicio = new ServicioVerificacion()) {
   });
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1])) {
   const puerto = Number(process.env.PORT) || 3000;
   const servicio = new ServicioVerificacion();
   if (!process.env.SIN_DEMO) sembrarDemo(servicio);
