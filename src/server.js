@@ -1,6 +1,7 @@
 // API HTTP minima (sin dependencias) + archivos de la app web. Datos en memoria.
 // IMPORTANTE: sin autenticacion real (el "quien" lo declara el cliente). Solo para pruebas locales.
 import http from 'node:http';
+import os from 'node:os';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -92,7 +93,22 @@ export function crearServidor(servicio = new ServicioVerificacion()) {
 
 if (process.argv[1] && path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1])) {
   const puerto = Number(process.env.PORT) || 3000;
+  // --red (npm run red): acepta celulares del mismo Wi-Fi. Sin login real: usar solo en la red de la casa.
+  const red = process.argv.includes('--red');
   const servicio = new ServicioVerificacion();
   if (!process.env.SIN_DEMO) sembrarDemo(servicio);
-  crearServidor(servicio).listen(puerto, '127.0.0.1', () => console.log(`Aló Seguro (prototipo) en http://127.0.0.1:${puerto}`));
+  crearServidor(servicio).listen(puerto, red ? '0.0.0.0' : '127.0.0.1', () => {
+    console.log(`Aló Seguro (prototipo) en http://127.0.0.1:${puerto}`);
+    if (red) {
+      // Se omiten adaptadores virtuales (WSL, Hyper-V, Docker, VirtualBox): no los ven los celulares.
+      const ips = Object.entries(os.networkInterfaces())
+        .filter(([nombre]) => !/vethernet|wsl|docker|virtualbox|vmware|hyper-v/i.test(nombre))
+        .flatMap(([, lista]) => lista)
+        .filter(i => i.family === 'IPv4' && !i.internal && !i.address.startsWith('169.254.'))
+        .map(i => i.address);
+      console.log('Desde un celular en el mismo Wi-Fi, abra:');
+      for (const ip of ips) console.log(`  http://${ip}:${puerto}`);
+      console.log('AVISO: sin login real. No lo deje abierto en redes públicas.');
+    }
+  });
 }

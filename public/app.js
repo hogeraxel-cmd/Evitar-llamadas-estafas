@@ -28,6 +28,13 @@ function pantalla(...nodos) { limpiar(); $app.replaceChildren(...nodos); }
 function limpiar() { temporizadores.forEach(clearInterval); temporizadores = []; }
 function cada(ms, fn) { fn(); temporizadores.push(setInterval(fn, ms)); }
 function guardado(k, v) { try { return v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch { return null; } }
+// Bloquea un boton mientras espera la respuesta (evita dobles toques).
+async function ocupado(boton, fn) {
+  if (boton.disabled) return;
+  boton.disabled = true;
+  try { return await fn(); } finally { boton.disabled = false; }
+}
+const mostrar = nodo => requestAnimationFrame(() => nodo.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
 // ---------- quien eres ----------
 async function elegir() {
@@ -56,7 +63,7 @@ async function vistaMayor() {
     el('div', { class: 'card' },
       el('h2', {}, '¿Alguien dice ser de su familia y le pide dinero?'),
       el('p', {}, 'No transfiera nada. Primero toque el nombre de quien dice ser:'),
-      el('div', { class: 'lista' }, otros.map(m => el('button', { class: 'btn primario', type: 'button', onclick: () => verificar(m, zonaVerif) }, `Verificar a ${m.nombre}`))),
+      el('div', { class: 'lista' }, otros.map(m => el('button', { class: 'btn primario', type: 'button', onclick: e => ocupado(e.currentTarget, () => verificar(m, zonaVerif)) }, `Verificar a ${m.nombre}`))),
     ),
     zonaVerif, zonaTexto,
   );
@@ -68,16 +75,24 @@ async function verificar(objetivo, zona) {
   limpiarZonaTimers();
   let sol;
   try { sol = await post('/verificaciones', { solicitanteId: yo.id, objetivoId: objetivo.id }); }
-  catch (e) { zona.replaceChildren(el('p', { class: 'estado mal' }, e.message)); return; }
-  const numero = el('div', { class: 'numero' }, sol.desafio);
-  const msg = el('p', { class: 'estado pendiente' }, sol.mensaje);
-  zona.replaceChildren(el('h2', {}, `Verificando a ${objetivo.nombre}`), numero, msg);
+  catch (e) { zona.replaceChildren(el('p', { class: 'estado mal' }, 'No se pudo conectar. Intente de nuevo.')); mostrar(zona); return; }
+  const numero = el('div', { class: 'numero', ariaLabel: `Número ${sol.desafio}` }, sol.desafio);
+  const msg = el('p', { class: 'estado pendiente grande' }, sol.mensaje);
+  const reloj = el('p', { class: 'muted reloj' });
+  zona.replaceChildren(el('h2', {}, `Verificando a ${objetivo.nombre}`), numero, msg, reloj);
+  mostrar(zona);
+  const tic = () => {
+    const s = Math.max(0, Math.round((sol.expira - Date.now()) / 1000));
+    reloj.textContent = `Quedan ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} para que responda.`;
+  };
+  tic();
+  temporizadores.push(setInterval(tic, 1000));
   temporizadores.push(setInterval(async () => {
     try {
       const v = await api(`/verificaciones/${sol.id}/solicitante?quien=${encodeURIComponent(yo.id)}`);
       msg.textContent = v.mensaje;
-      msg.className = 'estado ' + (v.estado === 'pendiente' ? 'pendiente' : v.estado === 'verificado' ? 'verificado' : 'mal');
-      if (v.estado !== 'pendiente') { numero.hidden = true; limpiarZonaTimers(); }
+      msg.className = 'estado grande ' + (v.estado === 'pendiente' ? 'pendiente' : v.estado === 'verificado' ? 'verificado' : 'mal');
+      if (v.estado !== 'pendiente') { numero.hidden = true; reloj.hidden = true; limpiarZonaTimers(); mostrar(zona); }
     } catch { /* reintenta en el siguiente ciclo */ }
   }, 1500));
 }
@@ -93,14 +108,20 @@ function formularioTexto(zona) {
     el('h2', {}, '¿Es una estafa?'),
     el('label', { htmlFor: 'texto', class: 'muted' }, 'Cuente con sus palabras qué le pidieron.'),
     area,
-    el('button', { class: 'btn', type: 'button', onclick: async () => {
-      if (!area.value.trim()) return;
-      const r = await post('/analizar', { texto: area.value });
+    el('button', { class: 'btn', type: 'button', onclick: e => ocupado(e.currentTarget, async () => {
+      if (!area.value.trim()) { salida.replaceChildren(el('p', { class: 'muted' }, 'Primero escriba lo que le dijeron.')); return; }
+      let r;
+      try { r = await post('/analizar', { texto: area.value }); }
+      catch { salida.replaceChildren(el('p', { class: 'estado mal' }, 'No se pudo revisar. Intente de nuevo.')); return; }
+      const titulo = { alto: 'Cuidado: parece una estafa.', medio: 'Tenga cuidado.', bajo: 'No vemos señales de estafa.' }[r.nivel];
       salida.replaceChildren(
-        el('p', { class: 'estado ' + (r.nivel === 'alto' ? 'mal' : r.nivel === 'medio' ? 'pendiente' : 'verificado') }, `Riesgo ${r.nivel} (${r.puntaje}%). ${r.recomendacion}`),
+        el('div', { class: 'estado grande ' + (r.nivel === 'alto' ? 'mal' : r.nivel === 'medio' ? 'pendiente' : 'verificado') },
+          el('p', {}, titulo), el('p', { class: 'normal' }, r.recomendacion)),
+        r.senales.length ? el('p', { class: 'muted' }, 'Lo que nos hizo dudar:') : '',
         el('div', { class: 'chips' }, r.senales.map(s => el('span', { class: 'chip' }, s.etiqueta))),
       );
-    } }, 'Revisar'),
+      mostrar(salida);
+    }) }, 'Revisar'),
     salida,
   );
 }
@@ -123,9 +144,17 @@ async function vistaFamiliar() {
 async function tarjetaPendiente(p, alTerminar) {
   const cont = el('div', { class: 'card' });
   const respuesta = async body => {
-    const r = await post(`/verificaciones/${p.id}/responder`, { quienId: yo.id, ...body });
+    cont.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    let r;
+    try { r = await post(`/verificaciones/${p.id}/responder`, { quienId: yo.id, ...body }); }
+    catch {
+      cont.querySelectorAll('button').forEach(b => { b.disabled = false; });
+      cont.append(el('p', { class: 'estado mal' }, 'No se pudo enviar. Intente de nuevo.'));
+      return;
+    }
     alTerminar();
-    cont.replaceChildren(el('p', { class: 'estado ' + (r.estado === 'verificado' ? 'verificado' : 'mal') }, r.estado === 'verificado' ? 'Gracias. Confirmado.' : 'Listo. Avisamos a la familia.'));
+    const textos = { verificado: 'Gracias. Confirmado.', no_soy_yo: 'Listo. Avisamos a la familia.', expirado: 'Este pedido ya venció.' };
+    cont.replaceChildren(el('p', { class: 'estado ' + (r.estado === 'verificado' ? 'verificado' : 'mal') }, textos[r.estado] ?? 'No coincidió el número. Avisamos a la familia.'));
   };
   const mostrarOpciones = () => cont.replaceChildren(
     el('h2', {}, p.mensaje),
@@ -139,8 +168,16 @@ async function tarjetaPendiente(p, alTerminar) {
 // PIN local para abrir el aviso. Es una proteccion basica del prototipo:
 // en la version real se usa huella/rostro del telefono (WebAuthn).
 async function hash(pin) {
-  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${yo.id}:${pin}`));
-  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  const texto = `${yo.id}:${pin}`;
+  if (globalThis.crypto?.subtle) {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+  // Sin HTTPS (celular entrando por http://192.168...) el navegador no ofrece crypto.subtle.
+  // Solo para el prototipo en la red de la casa: hash simple FNV-1a.
+  let h = 0x811c9dc5;
+  for (const c of texto) { h ^= c.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+  return 'fnv:' + h.toString(16);
 }
 async function compuertaPin(cont, continuar) {
   const guardada = guardado('pin_' + yo.id);
@@ -165,8 +202,14 @@ let alertasTimer = null;
 function alertas() {
   const zona = document.getElementById('zalertas') ?? el('div');
   if (!zona.id) { zona.id = 'zalertas'; $app.append(zona); }
+  let ultima = null;
   const pintar = async () => {
-    const lista = await api(`/alertas/${FAMILIA}`).catch(() => []);
+    const lista = await api(`/alertas/${FAMILIA}`).catch(() => null);
+    if (!lista) return;
+    // Solo redibuja si cambió: así no parpadea ni el lector de pantalla repite los avisos.
+    const firma = lista.map(a => a.id).join();
+    if (firma === ultima) return;
+    ultima = firma;
     zona.replaceChildren(
       el('h2', {}, 'Avisos de la familia'),
       ...(lista.length ? lista.slice().reverse().map(a => el('div', { class: 'alerta ' + (a.gravedad === 'alta' ? 'alta' : '') },

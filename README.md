@@ -9,7 +9,9 @@ npm start            # http://127.0.0.1:3000 (familia de ejemplo: Rosa, Nico y C
 npm test             # 25 pruebas
 ```
 
-Abre la app en dos pestañas (o dos teléfonos en la misma red, cambiando el host del servidor): una como **Rosa** y otra como **Nico**.
+Abre la app en dos ventanas (una normal y otra de incógnito, porque la app recuerda en el navegador quién eres): una como **Rosa** y otra como **Nico**.
+
+**En celulares del mismo Wi-Fi:** `npm run red` muestra la dirección (por ejemplo `http://192.168.0.180:3000`) para abrir en cada celular. Sin login real: úsalo solo en la red de la casa. Sin HTTPS no se puede instalar como app ni recibir avisos; eso llega con Firebase (ver `docs/PLAN-FIREBASE.md`).
 Rosa toca "Verificar a Nico", Nico crea un PIN, y elige el número que ve Rosa, o toca "No soy yo".
 
 ## Qué es y qué no es

@@ -17,7 +17,14 @@ Prototipo de verificación de familiares y detección de estafas telefónicas. V
 - Detector (`src/riesgo.js`): ahora reconoce el trato de "tú" (transfieras, no le digas, dime el código...). "Familiar en apuros o con número nuevo + dinero" es alto aunque no haya urgencia. Las frases seguras ("no necesita pagar") se quitan del texto antes de buscar señales.
 - Textos con tildes y sin género fijo; las alertas dicen quién llamó a quién ("alguien llamó a Rosa haciéndose pasar por Nico").
 
+- `npm run red`: servidor abierto al Wi-Fi para probar en celulares. El firewall de Windows ya permite Node (perfil Público).
+- Sin HTTPS no existe `crypto.subtle`: el PIN usa un hash simple de respaldo (`public/app.js`).
+- Mejoras para adultos mayores en `public/app.js`: baja sola al número y al resultado, cuenta regresiva de 2 min, resultado en palabras ("Cuidado: parece una estafa"), botones bloqueados mientras cargan, mensajes si falla la red, avisos que solo se redibujan si cambian.
+- Plan de Firebase en `docs/PLAN-FIREBASE.md`.
+
 ## Pendientes
 
+- **Etapa 1**: probar con celulares reales en la casa (`npm run red`), idealmente con una persona mayor de verdad, y anotar qué le cuesta.
+- **Etapa 2**: seguir `docs/PLAN-FIREBASE.md`. Primer paso: Axel crea el proyecto en la consola de Firebase.
 - Probar el detector con más mensajes reales de estafas en Chile (WhatsApp, "su cuenta será bloqueada", encomiendas retenidas).
-- Lo del README: autenticación real, base de datos, avisos push, huella/rostro en vez del PIN, telefonía (revisión legal).
+- Huella/rostro en vez del PIN y telefonía (revisión legal).

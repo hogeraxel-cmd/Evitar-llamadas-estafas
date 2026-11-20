@@ -12,7 +12,7 @@ test('nieto en apuros con numero nuevo, dinero y secreto es riesgo alto', () => 
   const r = analizarTexto('Abuela, soy yo, cambié de número. Tuve un accidente, necesito que me transfieras plata ahora mismo y no le diga a nadie.');
   assert.equal(r.nivel, 'alto');
   assert.ok(r.puntaje >= 90);
-  assert.match(r.recomendacion, /Verificar familiar/);
+  assert.match(r.recomendacion, /Verificar a/);
 });
 
 test('farmacia que avisa una receta es riesgo bajo', () => {

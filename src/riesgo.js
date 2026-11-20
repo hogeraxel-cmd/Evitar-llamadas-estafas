@@ -74,7 +74,7 @@ export function analizarTexto(texto) {
 function recomendar(nivel, ids) {
   if (nivel === 'alto') {
     return ids.has('apuros') || ids.has('numero_nuevo')
-      ? 'No transfiera nada. Corte y use "Verificar familiar" en la aplicación.'
+      ? 'No transfiera nada. Corte y toque el botón "Verificar a…" de su familiar, más arriba en esta aplicación.'
       : 'Corte la llamada. Ningún banco ni institución pide códigos o claves por teléfono.';
   }
   if (nivel === 'medio') return 'Desconfíe y consulte a un familiar antes de seguir.';
