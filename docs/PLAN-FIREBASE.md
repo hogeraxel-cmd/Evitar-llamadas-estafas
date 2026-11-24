@@ -102,3 +102,24 @@ Detalles:
 - Política de privacidad simple (se guardan números de teléfono y nombres).
 - Botón para salir de la familia y borrar los datos.
 - La parte de llamadas (grabar o transcribir) queda fuera hasta tener revisión legal.
+
+## Avance (2026-11-24): pasos 2 y 3 hechos en el emulador
+
+Código en `firebase/`, con 29 pruebas contra el emulador (`cd firebase && npm test`). Sin proyecto real ni despliegue.
+
+Decisiones que difieren del esquema de arriba:
+
+- **`usuarios/{uid}`** (`{familiaId}`): la app necesita saber a qué familia pertenece quien entró. Cada uno lee solo el suyo.
+- **`invitaciones/{sha256(codigo)}`** va en la raíz y no dentro de `familias/`: así `unirse` la encuentra por el código sin conocer la familia. El código nunca se guarda en claro. Vence a las 24 h y es de un solo uso.
+- **`intentosInvitacion/{uid}`**: máximo 10 intentos de código por hora por persona, contados en una transacción aparte (si no, un intento fallido revertiría su propio conteo). Falta sumar App Check para frenar abuso desde muchas cuentas.
+- **`admin` es un campo** del miembro (`rol` queda en `adulto_mayor` | `familiar`). Solo el admin invita.
+- **`familias/{id}/ajustes/palabra`**: la palabra de la familia. La leen los miembros; solo la función la escribe.
+- La verificación guarda los **nombres cortos** (`solicitante`, `objetivo`) para armar los avisos sin más lecturas.
+- El único campo que el celular escribe es `vistoEn` (con la hora del servidor), para saber si el familiar usa la app.
+
+Pendiente de este bloque:
+
+- Elegir la ubicación de Firestore en la consola: debe ser Santiago (`southamerica-west1`) para coincidir con la región de las funciones.
+- La tarea `vencerVerificaciones` necesita el plan Blaze (Cloud Scheduler). Mientras tanto, `responderVerificacion` ya vence al vuelo si llega tarde, y la app puede comparar `expira` con la hora.
+- Solo se probó que `functions/index.js` carga y expone las funciones; los envoltorios `onCall` se probarán cuando haya emulador de Functions o proyecto.
+- `analizarTexto` como función y el aviso por push/SMS/llamada siguen en los pasos 5 a 7.

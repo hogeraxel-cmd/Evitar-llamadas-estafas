@@ -1,0 +1,67 @@
+rules_version = '2';
+
+// Reglas de Aló Seguro. Principio: el celular NO es de fiar.
+// Todo lo que cambia el estado de una verificacion, una alerta, una familia o una invitacion
+// lo escriben las Cloud Functions (que se saltan estas reglas). Desde el celular solo se lee,
+// y solo lo que corresponde a cada persona.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function conSesion() { return request.auth != null; }
+
+    function miembroDe(familiaId) {
+      return conSesion()
+        && exists(/databases/$(database)/documents/familias/$(familiaId)/miembros/$(request.auth.uid));
+    }
+
+    // Cada persona ve solo su propio perfil (a que familia pertenece).
+    match /usuarios/{uid} {
+      allow read: if conSesion() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /familias/{familiaId} {
+      allow read: if miembroDe(familiaId);
+      allow write: if false;
+
+      match /miembros/{uid} {
+        allow read: if miembroDe(familiaId);
+        // Lo unico que el celular escribe: "vistoEn", para saber si el familiar usa la app.
+        // Nombre, rol, telefono y admin solo cambian por funciones que los validan.
+        allow update: if conSesion() && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vistoEn'])
+          && request.resource.data.get('vistoEn', null) == request.time;
+        allow create, delete: if false;
+      }
+
+      // Palabra clave de la familia: la leen los miembros, solo una funcion la escribe.
+      match /ajustes/{doc} {
+        allow read: if miembroDe(familiaId);
+        allow write: if false;
+      }
+    }
+
+    // Invitaciones y contadores de intentos: solo funciones.
+    match /invitaciones/{id} { allow read, write: if false; }
+    match /intentosInvitacion/{uid} { allow read, write: if false; }
+
+    match /verificaciones/{id} {
+      // Las ven quien la pidio (Rosa) y quien debe responder (Nico). Nadie mas, ni siquiera la familia.
+      allow read: if conSesion()
+        && (resource.data.solicitanteId == request.auth.uid || resource.data.objetivoId == request.auth.uid);
+      allow write: if false;
+
+      // El numero correcto. Si Nico pudiera leerlo, la verificacion no serviria.
+      match /privado/{doc} {
+        allow read: if conSesion()
+          && get(/databases/$(database)/documents/verificaciones/$(id)).data.solicitanteId == request.auth.uid;
+        allow write: if false;
+      }
+    }
+
+    match /alertas/{id} {
+      allow read: if miembroDe(resource.data.familiaId);
+      allow write: if false;
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "verificaciones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estado", "order": "ASCENDING" },
+        { "fieldPath": "expira", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "alertas",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "familiaId", "order": "ASCENDING" },
+        { "fieldPath": "cuando", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

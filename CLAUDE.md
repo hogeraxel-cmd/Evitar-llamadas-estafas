@@ -28,9 +28,15 @@ Prototipo de verificación de familiares y detección de estafas telefónicas. V
 - "¿Es una estafa?" ahora es de preguntas Sí/No (`PREGUNTAS` y `analizar({texto, marcadas})` en `src/riesgo.js`); escribir queda en "Prefiero escribirlo".
 - Familiares (Nico, Camila) guardan su número de siempre y la palabra de la familia en "Preparar la ayuda para la familia". Los números de la demo son ficticios.
 
+## Hecho (2026-11-24)
+
+- Etapa 2, pasos 2 y 3 del plan, en `firebase/` (independiente de la raíz): reglas de seguridad, lógica sobre Firestore y funciones, con 29 pruebas en el emulador (`cd firebase && npm install && npm test`; necesita Java). Detalle y decisiones en el final de `docs/PLAN-FIREBASE.md`.
+- La app web actual sigue usando `src/server.js` (sin Firebase). Falta el paso 5 (cambiar `fetch('/api/...')` por el SDK).
+- Si se vuelve a tocar el login: un intento previo de cuentas con token y `datos.json` se descartó a favor de Firebase Auth (estaba en la rama local `respaldo-cuentas-y-sesiones`, no subida).
+
 ## Pendientes
 
 - **Etapa 1**: probar con celulares reales en la casa (`npm run red`), idealmente con una persona mayor de verdad, y anotar qué le cuesta.
-- **Etapa 2**: seguir `docs/PLAN-FIREBASE.md`. Primer paso: Axel crea el proyecto en la consola de Firebase.
+- **Etapa 2**: seguir `docs/PLAN-FIREBASE.md`. Pasos 2 y 3 listos en emulador. Axel: crear el proyecto en la consola (ubicación de Firestore en Santiago, plan Blaze con límite de presupuesto). Después, pasos 4 (login por teléfono e invitaciones) y 5 (app conectada).
 - Probar el detector con más mensajes reales de estafas en Chile (WhatsApp, "su cuenta será bloqueada", encomiendas retenidas).
 - Huella/rostro en vez del PIN y telefonía (revisión legal).
