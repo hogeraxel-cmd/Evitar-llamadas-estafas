@@ -8,6 +8,10 @@ import * as L from './src/logica.js';
 
 initializeApp();
 const REGION = 'southamerica-west1';
+// Cloud Scheduler no existe en Santiago (southamerica-west1): publicar ahi la tarea falla con
+// "not a valid location". La tarea va en Sao Paulo, que es la region mas cercana que lo tiene;
+// igual escribe en Firestore (Santiago) sin problema.
+const REGION_TAREA = 'southamerica-east1';
 
 // Exige sesion (Firebase Auth) y traduce los errores de la logica a errores que la app entiende.
 // El uid sale SIEMPRE de la sesion, nunca de lo que mande el celular.
@@ -31,6 +35,6 @@ export const definirPalabraClave = llamable(L.definirPalabraClave);
 export const crearVerificacion = llamable(L.crearVerificacion);
 export const responderVerificacion = llamable(L.responderVerificacion);
 
-export const vencerVerificaciones = onSchedule({ region: REGION, schedule: 'every 1 minutes' }, async () => {
+export const vencerVerificaciones = onSchedule({ region: REGION_TAREA, schedule: 'every 1 minutes' }, async () => {
   await L.vencerPendientes(getFirestore());
 });
