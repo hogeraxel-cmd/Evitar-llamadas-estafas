@@ -34,6 +34,12 @@ Prototipo de verificación de familiares y detección de estafas telefónicas. V
 - La app web actual sigue usando `src/server.js` (sin Firebase). Falta el paso 5 (cambiar `fetch('/api/...')` por el SDK).
 - Si se vuelve a tocar el login: un intento previo de cuentas con token y `datos.json` se descartó a favor de Firebase Auth (estaba en la rama local `respaldo-cuentas-y-sesiones`, no subida).
 
+## Firebase (2026-11-25)
+
+- Proyecto creado por Axel: ID `alo-seguro`, plan Blaze con presupuesto de 10.000 CLP (solo avisa, no corta el gasto), Authentication por teléfono habilitado con SMS solo a Chile y dos números de prueba (borrarlos antes de usar con familia real), app web `alo-seguro-web` registrada. `firebase/.firebaserc` apunta a ese proyecto.
+- Falta confirmar que Firestore quedó en Santiago (`southamerica-west1`) y publicar reglas y funciones (`firebase deploy`, lo corre Axel desde su PC).
+- El `apiKey` de la app web es público por diseño, pero con el login por SMS se puede abusar: antes de publicar, restringir la clave por dominio en Google Cloud y activar App Check.
+
 ## Pendientes
 
 - **Etapa 1**: probar con celulares reales en la casa (`npm run red`), idealmente con una persona mayor de verdad, y anotar qué le cuesta.
