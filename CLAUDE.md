@@ -37,7 +37,7 @@ Prototipo de verificación de familiares y detección de estafas telefónicas. V
 ## Firebase (2026-11-25)
 
 - Proyecto creado por Axel: ID `alo-seguro`, plan Blaze con presupuesto de 10.000 CLP (solo avisa, no corta el gasto), Authentication por teléfono habilitado con SMS solo a Chile y dos números de prueba (borrarlos antes de usar con familia real), app web `alo-seguro-web` registrada. `firebase/.firebaserc` apunta a ese proyecto.
-- Falta confirmar que Firestore quedó en Santiago (`southamerica-west1`) y publicar reglas y funciones (`firebase deploy`, lo corre Axel desde su PC).
+- Firestore está en Santiago (`southamerica-west1`). Reglas e índices ya publicados (2026-11-25). Funciones: Node 20 fue retirado por Google el 2026-10-30, el proyecto ahora usa `nodejs22` (`firebase/firebase.json`, `functions/package.json`); falta publicarlas con `npx firebase deploy --only functions` (lo corre Axel desde su PC).
 - El `apiKey` de la app web es público por diseño, pero con el login por SMS se puede abusar: antes de publicar, restringir la clave por dominio en Google Cloud y activar App Check.
 
 ## Pendientes
